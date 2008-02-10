@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="YourSway"
+            class="com.yoursway.projectsync.ui.ProjectSyncPrefPage"
+            id="com.yoursway.projectsync.ui.page1"
+            name="Project Sync">
+      </page>
+   </extension>
+
+</plugin>

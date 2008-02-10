@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Core Plug-in
+Bundle-SymbolicName: com.yoursway.projectsync.core
+Bundle-Version: 1.0.0
+Bundle-Activator: com.yoursway.projectsync.core.internal.Activator
+Bundle-Vendor: YourSway
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.core.resources,
+ org.eclipse.ui,
+ org.eclipse.jdt.ui
+Eclipse-LazyStart: true
+Export-Package: com.yoursway.projectsync.core
