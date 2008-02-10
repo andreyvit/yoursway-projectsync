@@ -1,0 +1,24 @@
+#! /bin/sh
+pushd "$(dirname $0)" >/dev/null
+dir="$(pwd)"
+popd >/dev/null
+
+src=$dir
+date="$(date '+%Y%m%d-%H%M')"
+qualifier=N$date
+folder=ProjectSync_$qualifier
+
+dist=$dir/dist
+mkdir -p $dist
+cd $dist
+output=$dist/$folder
+
+ecabu --binary /Applications/Eclipse\ 3.3.app/Contents/Resources/Java/plugins --qualifier "$qualifier" --include-following --source $src --output $output --exclude '*tests*' --include 'org.eclipse.swt.*' || {
+  echo "Build failed, aborting dist."
+  exit 1
+}
+
+zipf=$folder.zip
+zip -r $zipf $folder
+
+
