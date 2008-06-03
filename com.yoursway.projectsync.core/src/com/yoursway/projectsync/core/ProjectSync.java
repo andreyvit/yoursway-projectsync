@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
@@ -24,26 +25,6 @@ import org.eclipse.ui.IWorkingSet;
 import com.yoursway.projectsync.folders.FolderList;
 
 public class ProjectSync {
-    
-    static class Addition {
-        
-        private final File foundProject;
-        private final MonitoredFolder folder;
-        
-        public Addition(File foundProject, MonitoredFolder folder) {
-            this.foundProject = foundProject;
-            this.folder = folder;
-        }
-        
-        public File getFoundProject() {
-            return foundProject;
-        }
-        
-        public MonitoredFolder getFolder() {
-            return folder;
-        }
-        
-    }
     
     private static FolderList folderList() {
         return new FolderList();
@@ -65,24 +46,18 @@ public class ProjectSync {
         folderList().set(Collections.<MonitoredFolder> emptyList());
     }
     
-    public static void sync(Collection<String> warnings) {
-        if (warnings == null)
-            warnings = new ArrayList<String>();
+    public static void sync(final IProjectSyncFeedback feedback) {
+        final List<String> warnings = new ArrayList<String>();
         
         final IWorkspace workspace = ResourcesPlugin.getWorkspace();
         final IWorkspaceRoot root = workspace.getRoot();
-        Set<File> existingProjects = new HashSet<File>();
+        final Set<File> existingProjects = new HashSet<File>();
         for (IProject project : root.getProjects())
             existingProjects.add(project.getLocation().toFile());
         
-        final ArrayList<Addition> additions = new ArrayList<Addition>();
-        for (MonitoredFolder folder : getFolders()) {
-            Set<File> foundProjects = new HashSet<File>();
-            folder.findProjects(foundProjects, warnings);
-            for (File location : foundProjects)
-                if (!existingProjects.contains(location))
-                    additions.add(new Addition(location, folder));
-        }
+        final List<Addition> additions = new ArrayList<Addition>();
+        for (MonitoredFolder folder : getFolders())
+            folder.findProjects(additions, warnings);
         
         WorkspaceJob job = new WorkspaceJob("Adding missing projects") {
             
@@ -93,32 +68,29 @@ public class ProjectSync {
                 
                 for (Addition addition : additions) {
                     File location = addition.getFoundProject();
-                    String workingSetName = addition.getFolder().workingSet();
+                    String workingSetName = addition.getWorkingSet();
                     
                     String name = location.getName();
                     progress.setTaskName("Adding " + name);
-                    IProjectDescription description = workspace.newProjectDescription(name);
-                    description.setLocation(new Path(location.getAbsolutePath()));
+
                     IProject project = root.getProject(name);
-                    if (project.exists()) {
-                        //                        warnings.add("Project " + project + " already exists at " + project.getLocation() + ", but found at " 
-                        //                                + location);
-                        continue;
-                    }
                     try {
-                        project.create(description, progress.newChild(1));
-                        project.open(progress.newChild(18));
+                        if (!project.exists()) {
+                            IProjectDescription description = workspace.newProjectDescription(name);
+                            description.setLocation(new Path(location.getAbsolutePath()));
+                            project.create(description, progress.newChild(1));
+                            project.open(progress.newChild(18));
+                        }
                         
                         IWorkingSet ws = WorkingSetUtils.lookupWorkingSet(workingSetName);
                         WorkingSetUtils.addToWorkingSet(project, ws);
                         progress.worked(1);
                     } catch (CoreException e) {
                         e.printStackTrace();
-                        //                        warnings.add("Cannot create project " + name + " because of " +
-                        //                                e.getClass().getSimpleName() + ": " + e.getMessage());
+                        warnings.add("Error processing project " + name + " because of " +
+                                e.getClass().getSimpleName() + ": " + e.getMessage());
                     }
                 }
-                
                 return Status.OK_STATUS;
             }
             

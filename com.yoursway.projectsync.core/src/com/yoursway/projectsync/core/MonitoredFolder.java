@@ -6,28 +6,22 @@ import java.util.Collection;
 
 import org.eclipse.core.runtime.Assert;
 
+
 public final class MonitoredFolder implements Serializable {
     
     private static final long serialVersionUID = 1L;
     
     private final File location;
 
-    private final String workingSet;
-
-    public MonitoredFolder(File location, String workingSet) {
+    public MonitoredFolder(File location) {
         Assert.isNotNull(location);
         this.location = location;
-        this.workingSet = workingSet;
     }
 
     public File location() {
         return location;
     }
     
-    public String workingSet() {
-        return workingSet;
-    }
-
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -53,18 +47,30 @@ public final class MonitoredFolder implements Serializable {
         return true;
     }
     
-    public void findProjects(Collection<File> paths, Collection<String> warnings) {
+    public void findProjects(Collection<Addition> paths, Collection<String> warnings) {
         File[] children = location.listFiles();
         if (children == null) {
             warnings.add("Folder " + location + " does not exist.");
             return;
         }
         for (File child : children)
-            if (child.isDirectory())
-                if (new File(child, ".project").isFile())
-                    paths.add(child);
+            if (child.isDirectory()) {
+                String workingSet = child.getName();
+                scanChildren(child, paths, warnings, workingSet, 3);
+            }
     }
     
+    private void scanChildren(File parent, Collection<Addition> paths, Collection<String> warnings, String workingSet, int depth) {
+        File[] children = parent.listFiles();
+        if (children != null)
+            for (File child : children)
+                if (child.isDirectory())
+                    if (new File(child, ".project").isFile())
+                        paths.add(new Addition(child, workingSet));
+                    else if (depth > 0)
+                        scanChildren(child, paths, warnings, workingSet, depth - 1);
+    }
+
     @Override
     public String toString() {
         return location.toString();

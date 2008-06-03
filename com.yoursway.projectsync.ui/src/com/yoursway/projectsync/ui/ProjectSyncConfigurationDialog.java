@@ -5,14 +5,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
-import org.eclipse.jface.preference.PreferencePage;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -25,25 +21,23 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import com.yoursway.projectsync.core.MonitoredFolder;
 import com.yoursway.projectsync.core.ProjectSync;
-import com.yoursway.projectsync.ui.internal.Activator;
-import com.yoursway.projectsync.ui.internal.WorkingSetConfigurationBlock;
 
-public class ProjectSyncPrefPage extends PreferencePage implements IWorkbenchPreferencePage {
-    
+public class ProjectSyncConfigurationDialog extends Dialog {
+
     private Composite master;
     private TableViewer tableViewer;
     private Table table;
@@ -51,36 +45,51 @@ public class ProjectSyncPrefPage extends PreferencePage implements IWorkbenchPre
     private Composite buttonBar;
     private Button removeButton;
     private MonitoredFolder folder;
-    private Button syncButton;
     private Label spacer;
     private Button clearButton;
     private Group detailGroup;
     
-    public ProjectSyncPrefPage() {
-    }
-    
-    public ProjectSyncPrefPage(String title) {
-        super(title);
-    }
-    
-    public ProjectSyncPrefPage(String title, ImageDescriptor image) {
-        super(title, image);
+    public ProjectSyncConfigurationDialog(Shell parentShell) {
+        super(parentShell);
     }
     
     @Override
-    protected Control createContents(Composite parent) {
+    protected boolean isResizable() {
+        return true;
+    }
+    
+    @Override
+    protected void configureShell(Shell newShell) {
+        super.configureShell(newShell);
+        newShell.setText("ProjectSync configuration");
+    }
+    
+    @Override
+    protected Point getInitialSize() {
+        return new Point(500, 400);
+    }
+    
+    @Override
+    protected void createButtonsForButtonBar(Composite parent) {
+        createButton(parent, IDialogConstants.OK_ID, "Close", true);
+    }
+    
+    @Override
+    protected Control createDialogArea(Composite parent) {
         master = new Composite(parent, SWT.NONE);
         master.setLayoutData(GridDataFactory.fillDefaults().grab(true, true).create());
         master.setLayout(GridLayoutFactory.swtDefaults().create());
         
-        Label description = new Label(master, SWT.NONE);
+        Label description = new Label(master, SWT.WRAP);
         description.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).create());
         description
-                .setText("This plugin automatically adds projects from the given folders into the workspace.");
+                .setText("ProjectSync will scan the list of folders set up here. For every subfoler, a working set " +
+                		"will be created. The contents of every subfolder will be scanned for Eclipse projects, " +
+                		"and all the found projects will be imported and added to the corresponding working set.");
         
         Label tableCaption = new Label(master, SWT.NONE);
         tableCaption.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).create());
-        tableCaption.setText("Folders to sync:");
+        tableCaption.setText("Working sets are defined inside these folders:");
         
         table = new Table(master, SWT.V_SCROLL | SWT.BORDER);
         table.setLayoutData(GridDataFactory.fillDefaults().grab(true, true).create());
@@ -92,13 +101,9 @@ public class ProjectSyncPrefPage extends PreferencePage implements IWorkbenchPre
         spacer = new Label(buttonBar, SWT.NONE);
         spacer.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).create());
         
-        syncButton = new Button(buttonBar, SWT.NONE);
-        syncButton.setLayoutData(GridDataFactory.fillDefaults().grab(false, false).create());
-        syncButton.setText("Synchronize!");
-        
         clearButton = new Button(buttonBar, SWT.NONE);
         clearButton.setLayoutData(GridDataFactory.fillDefaults().grab(false, false).create());
-        clearButton.setText("Clear");
+        clearButton.setText("Remove All");
         
         removeButton = new Button(buttonBar, SWT.NONE);
         removeButton.setLayoutData(GridDataFactory.fillDefaults().grab(false, false).create());
@@ -141,19 +146,6 @@ public class ProjectSyncPrefPage extends PreferencePage implements IWorkbenchPre
             
         });
         tableViewer.setInput(this);
-        
-        syncButton.addSelectionListener(new SelectionAdapter() {
-            
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                List<String> warnings = new ArrayList<String>();
-                ProjectSync.sync(warnings);
-                if (warnings.size() > 0) {
-                    MessageDialog.openWarning(getShell(), "Warnings", warnings.toString());
-                }
-            }
-            
-        });
         
         removeButton.addSelectionListener(new SelectionAdapter() {
             
@@ -216,7 +208,7 @@ public class ProjectSyncPrefPage extends PreferencePage implements IWorkbenchPre
         
         private Text path;
         private Button browse;
-        private Text workingSet;
+//        private Text workingSet;
         private boolean isSetting;
         
         public DetailComposite(Composite parent, int style) {
@@ -254,21 +246,21 @@ public class ProjectSyncPrefPage extends PreferencePage implements IWorkbenchPre
                 
             });
             
-            Label workingSetLabel = new Label(this, SWT.NONE);
-            workingSetLabel.setLayoutData(GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(
-                    false, false).create());
-            workingSetLabel.setText("Add to working set:");
-            
-            workingSet = new Text(this, SWT.BORDER);
-            workingSet.setLayoutData(GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true,
-                    false).create());
-            workingSet.addModifyListener(new ModifyListener() {
-                
-                public void modifyText(ModifyEvent e) {
-                    changed();
-                }
-                
-            });
+//            Label workingSetLabel = new Label(this, SWT.NONE);
+//            workingSetLabel.setLayoutData(GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(
+//                    false, false).create());
+//            workingSetLabel.setText("Add to working set:");
+//            
+//            workingSet = new Text(this, SWT.BORDER);
+//            workingSet.setLayoutData(GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true,
+//                    false).create());
+//            workingSet.addModifyListener(new ModifyListener() {
+//                
+//                public void modifyText(ModifyEvent e) {
+//                    changed();
+//                }
+//                
+//            });
             
             //            String[] workingSetIds= new String[] {Activator.JavaWorkingSetUpdater_ID, "org.eclipse.ui.resourceWorkingSetPage"}; //$NON-NLS-1$
             //            WorkingSetConfigurationBlock block = new WorkingSetConfigurationBlock(workingSetIds, "Add to working set", Activator.getDialogSettings("workingSetsBlock"));
@@ -288,7 +280,7 @@ public class ProjectSyncPrefPage extends PreferencePage implements IWorkbenchPre
                 return;
             isSetting = true;
             path.setText("");
-            workingSet.setText("");
+//            workingSet.setText("");
             isSetting = false;
         }
         
@@ -296,20 +288,20 @@ public class ProjectSyncPrefPage extends PreferencePage implements IWorkbenchPre
             if (isSetting)
                 return;
             isSetting = true;
-            path.setText(folder.location().getPath());
-            String ws = folder.workingSet();
-            workingSet.setText(ws == null ? "" : ws);
+            path.setText(PathUtils.toString(folder.location()));
+//            String ws = folder.workingSet();
+//            workingSet.setText(ws == null ? "" : ws);
             isSetting = false;
         }
         
         public MonitoredFolder get() {
-            File file = new File(path.getText());
+            File file = PathUtils.toFile(path.getText());
             if (!file.exists())
                 return null;
-            String ws = workingSet.getText();
-            if ((ws = ws.trim()).length() == 0 || "(none)".equalsIgnoreCase(ws))
-                ws = null;
-            return new MonitoredFolder(file, ws);
+//            String ws = workingSet.getText();
+//            if ((ws = ws.trim()).length() == 0 || "(none)".equalsIgnoreCase(ws))
+//                ws = null;
+            return new MonitoredFolder(file);
         }
         
     }

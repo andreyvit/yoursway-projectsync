@@ -2,13 +2,64 @@
 <?eclipse version="3.2"?>
 <plugin>
    <extension
-         point="org.eclipse.ui.preferencePages">
-      <page
-            category="YourSway"
-            class="com.yoursway.projectsync.ui.ProjectSyncPrefPage"
-            id="com.yoursway.projectsync.ui.page1"
-            name="Project Sync">
-      </page>
+         point="org.eclipse.ui.handlers">
+      <handler
+            class="com.yoursway.projectsync.ui.handlers.SynchronizeNowHandler"
+            commandId="com.yoursway.projectsync.ui.commands.syncNow">
+      </handler>
+      <handler
+            class="com.yoursway.projectsync.ui.handlers.ConfigureSynchronizationHandler"
+            commandId="com.yoursway.projectsync.ui.commands.configureSync">
+      </handler>
+   </extension>
+   <!--
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="com.yoursway.projectsync.ui.commands.sampleCommand"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+6">
+      </key>
+   </extension>
+   -->
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+         <menu
+               id="com.yoursway.projectsync.ui.menus.project"
+               label="Project"
+               mnemonic="P">
+            <command
+                  commandId="com.yoursway.projectsync.ui.commands.syncNow"
+                  id="com.yoursway.projectsync.ui.menus.syncNow"
+                  mnemonic="S">
+            </command>
+            <command
+                  commandId="com.yoursway.projectsync.ui.commands.configureSync"
+                  id="com.yoursway.projectsync.ui.menus.configureSync"
+                  mnemonic="U">
+            </command>
+         </menu>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            id="com.yoursway.projectsync.ui.commands.category"
+            name="ProjectSync">
+      </category>
+      <command
+            categoryId="com.yoursway.projectsync.ui.commands.category"
+            id="com.yoursway.projectsync.ui.commands.syncNow"
+            name="ProjectSync: Synchronize Now">
+      </command>
+      <command
+            categoryId="com.yoursway.projectsync.ui.commands.category"
+            id="com.yoursway.projectsync.ui.commands.configureSync"
+            name="ProjectSync: Configure Synchronization...">
+      </command>
    </extension>
 
 </plugin>
