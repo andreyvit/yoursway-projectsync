@@ -1,5 +1,7 @@
 package com.yoursway.projectsync.core;
 
+import static com.yoursway.projectsync.core.utils.ArrayListMultiMap.newArrayListMultiMap;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,6 +17,7 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.resources.WorkspaceJob;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
@@ -22,6 +25,8 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.ui.IWorkingSet;
 
+import com.yoursway.projectsync.core.utils.ArrayListMultiMap;
+import com.yoursway.projectsync.core.utils.MultiMap;
 import com.yoursway.projectsync.folders.FolderList;
 
 public class ProjectSync {
@@ -56,8 +61,24 @@ public class ProjectSync {
             existingProjects.add(project.getLocation().toFile());
         
         final List<Addition> additions = new ArrayList<Addition>();
-        for (MonitoredFolder folder : getFolders())
+        Collection<MonitoredFolder> folders = getFolders();
+        for (MonitoredFolder folder : folders)
             folder.findProjects(additions, warnings);
+        
+        IWorkingSet[] workingSets = WorkingSetUtils.getJavaWorkingSets();
+        MultiMap<IProject, String> projectsToWorkingSets = newArrayListMultiMap();
+        for (IWorkingSet workingSet : workingSets)
+            for (IAdaptable item : workingSet.getElements()) {
+                IProject project = (IProject) item.getAdapter(IProject.class);
+                if (project != null) 
+                    projectsToWorkingSets.put(project, workingSet.getName());
+            }
+        
+        final List<Move> moves = new ArrayList<Move>();
+        for (IProject project : root.getProjects())
+            if (project.isOpen())
+                for (MonitoredFolder folder : folders)
+                    folder.findMoves(moves, warnings, project, projectsToWorkingSets.get(project));
         
         WorkspaceJob job = new WorkspaceJob("Adding missing projects") {
             
@@ -91,6 +112,29 @@ public class ProjectSync {
                                 e.getClass().getSimpleName() + ": " + e.getMessage());
                     }
                 }
+                
+                for (Move move : moves) {
+                    IProject project = move.getProject();
+                    IProjectDescription description = project.getDescription();
+                    File oldLocation = project.getLocation().toFile();
+                    project.delete(false, true, null);
+                    boolean createdOk = false;
+                    try {
+                        File newLocation = new File(move.getParentFolder(), project.getName());
+                        oldLocation.renameTo(newLocation);
+                        description.setLocation(new Path(newLocation.getPath()));
+                        project.create(description, null);
+                        createdOk = true;
+                        project.open(null);
+                        warnings.add("Successfully moved " + project.getName() + " to " + newLocation.getParentFile());
+                    } finally {
+                        if (!createdOk) {
+                            description.setLocation(new Path(oldLocation.getPath()));
+                            project.create(description, null);
+                        }
+                    }
+                }
+                feedback.finished(warnings);
                 return Status.OK_STATUS;
             }
             

@@ -76,9 +76,7 @@ public class ProjectSyncConfigurationDialog extends Dialog {
     
     @Override
     protected Control createDialogArea(Composite parent) {
-        master = new Composite(parent, SWT.NONE);
-        master.setLayoutData(GridDataFactory.fillDefaults().grab(true, true).create());
-        master.setLayout(GridLayoutFactory.swtDefaults().create());
+        master = (Composite) super.createDialogArea(parent);
         
         Label description = new Label(master, SWT.WRAP);
         description.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).create());
@@ -88,7 +86,7 @@ public class ProjectSyncConfigurationDialog extends Dialog {
                 		"and all the found projects will be imported and added to the corresponding working set.");
         
         Label tableCaption = new Label(master, SWT.NONE);
-        tableCaption.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).create());
+        tableCaption.setLayoutData(GridDataFactory.fillDefaults().indent(0, 8).grab(true, false).create());
         tableCaption.setText("Working sets are defined inside these folders:");
         
         table = new Table(master, SWT.V_SCROLL | SWT.BORDER);
