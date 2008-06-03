@@ -26,22 +26,21 @@
    <extension
          point="org.eclipse.ui.menus">
       <menuContribution
-            locationURI="menu:org.eclipse.ui.main.menu?after=additions">
-         <menu
-               id="com.yoursway.projectsync.ui.menus.project"
-               label="Project"
-               mnemonic="P">
-            <command
-                  commandId="com.yoursway.projectsync.ui.commands.syncNow"
-                  id="com.yoursway.projectsync.ui.menus.syncNow"
-                  mnemonic="S">
-            </command>
-            <command
-                  commandId="com.yoursway.projectsync.ui.commands.configureSync"
-                  id="com.yoursway.projectsync.ui.menus.configureSync"
-                  mnemonic="U">
-            </command>
-         </menu>
+            locationURI="menu:project?after=additions">
+         <separator
+               name="com.yoursway.projectsync.ui.separator1"
+               visible="true">
+         </separator>
+         <command
+               commandId="com.yoursway.projectsync.ui.commands.syncNow"
+               id="com.yoursway.projectsync.ui.menus.syncNow"
+               mnemonic="S">
+         </command>
+         <command
+               commandId="com.yoursway.projectsync.ui.commands.configureSync"
+               id="com.yoursway.projectsync.ui.menus.configureSync"
+               mnemonic="U">
+         </command>
       </menuContribution>
    </extension>
    <extension
@@ -53,12 +52,12 @@
       <command
             categoryId="com.yoursway.projectsync.ui.commands.category"
             id="com.yoursway.projectsync.ui.commands.syncNow"
-            name="ProjectSync: Synchronize Now">
+            name="ProjectSync: Add Missing and Move Misplaced Projects">
       </command>
       <command
             categoryId="com.yoursway.projectsync.ui.commands.category"
             id="com.yoursway.projectsync.ui.commands.configureSync"
-            name="ProjectSync: Configure Synchronization...">
+            name="ProjectSync: Configure Folders...">
       </command>
    </extension>
 
