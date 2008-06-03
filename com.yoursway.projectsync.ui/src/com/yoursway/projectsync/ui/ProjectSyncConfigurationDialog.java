@@ -51,12 +51,10 @@ public class ProjectSyncConfigurationDialog extends Dialog {
     
     public ProjectSyncConfigurationDialog(Shell parentShell) {
         super(parentShell);
+        setShellStyle(SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL | SWT.MAX | SWT.RESIZE
+                | getDefaultOrientation());
     }
     
-    @Override
-    protected boolean isResizable() {
-        return true;
-    }
     
     @Override
     protected void configureShell(Shell newShell) {
