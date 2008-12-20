@@ -25,7 +25,6 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.ui.IWorkingSet;
 
-import com.yoursway.projectsync.core.utils.ArrayListMultiMap;
 import com.yoursway.projectsync.core.utils.MultiMap;
 import com.yoursway.projectsync.folders.FolderList;
 

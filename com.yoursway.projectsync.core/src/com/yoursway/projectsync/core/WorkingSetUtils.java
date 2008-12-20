@@ -12,6 +12,7 @@ import org.eclipse.ui.IWorkingSet;
 import org.eclipse.ui.IWorkingSetManager;
 import org.eclipse.ui.PlatformUI;
 
+@SuppressWarnings("restriction")
 public class WorkingSetUtils {
     
     /**
@@ -72,7 +73,6 @@ public class WorkingSetUtils {
         return ws;
     }
 
-    @SuppressWarnings("restriction")
     private static void addToPackageExplorer(final IWorkingSet ws) {
         Runnable runnable = new Runnable() {
             public void run() {
