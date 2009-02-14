@@ -117,9 +117,10 @@ public final class MonitoredFolder implements Serializable {
         List<File> candidateChildren = new ArrayList<File>();
         File[] children = workingSetDir.listFiles();
         if (children != null)
-            for (File child : children)
-                if (child.isDirectory() && !isProjectDirectory(child))
-                    candidateChildren.add(child);
+			for (File child : children)
+				if (child.isDirectory() && !isBogusDirectory(child)
+						&& !isProjectDirectory(child))
+					candidateChildren.add(child);
         
         if (candidateChildren.size() == 1)
             return candidateChildren.iterator().next();
@@ -127,7 +128,12 @@ public final class MonitoredFolder implements Serializable {
             return workingSetDir;
     }
     
-    @Override
+    private boolean isBogusDirectory(File child) {
+		String name = child.getName();
+		return name.matches("^[._](git|svn|hg|bzr)$");
+	}
+
+	@Override
     public String toString() {
         return location.toString();
     }

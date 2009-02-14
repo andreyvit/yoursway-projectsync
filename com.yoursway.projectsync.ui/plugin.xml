@@ -57,7 +57,7 @@
       <command
             categoryId="com.yoursway.projectsync.ui.commands.category"
             id="com.yoursway.projectsync.ui.commands.configureSync"
-            name="ProjectSync: Configure Folders...">
+            name="ProjectSync: Configure Folder...">
       </command>
    </extension>
 
